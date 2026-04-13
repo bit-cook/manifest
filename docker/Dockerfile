@@ -1,6 +1,6 @@
 # Stage 1: Install dependencies
 # Base image pinned by digest (multi-arch manifest list). Updated via Dependabot.
-FROM node:22-alpine@sha256:4d64b49e6c891c8fc821007cb1cdc6c0db7773110ac2c34bf2e6960adef62ed3 AS deps
+FROM node:25-alpine@sha256:ad82ecad30371c43f4057aaa4800a8ed88f9446553a2d21323710c7b937177fc AS deps
 WORKDIR /app
 COPY package.json package-lock.json turbo.json ./
 COPY packages/shared/package.json packages/shared/
@@ -16,7 +16,7 @@ COPY packages/backend packages/backend
 RUN npx turbo build --filter=manifest-backend --filter=manifest-frontend --filter=manifest-shared
 
 # Stage 3: Production dependencies only
-FROM node:22-alpine@sha256:4d64b49e6c891c8fc821007cb1cdc6c0db7773110ac2c34bf2e6960adef62ed3 AS prod-deps
+FROM node:25-alpine@sha256:ad82ecad30371c43f4057aaa4800a8ed88f9446553a2d21323710c7b937177fc AS prod-deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY packages/shared/package.json packages/shared/
@@ -40,7 +40,7 @@ RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev --ignore-scripts && \
     true
 
 # Stage 4: Production runtime
-FROM node:22-alpine@sha256:4d64b49e6c891c8fc821007cb1cdc6c0db7773110ac2c34bf2e6960adef62ed3 AS runtime
+FROM node:25-alpine@sha256:ad82ecad30371c43f4057aaa4800a8ed88f9446553a2d21323710c7b937177fc AS runtime
 WORKDIR /app
 
 LABEL org.opencontainers.image.title="Manifest" \
