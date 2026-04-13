@@ -4,9 +4,22 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to publish (e.g. 5.38.1)"
-        required: true
+        description: "Optional semver tag to publish (e.g. 5.38.1). Leave blank for a plain latest+sha build."
+        required: false
         type: string
+  push:
+    branches: [main]
+    paths:
+      - "docker/Dockerfile"
+      - ".dockerignore"
+      - "docker/docker-compose.yml"
+      - "docker/DOCKER_README.md"
+      - "packages/backend/**"
+      - "packages/frontend/**"
+      - "packages/shared/**"
+      - "package.json"
+      - "package-lock.json"
+      - "turbo.json"
   pull_request:
     branches: [main]
     paths:
@@ -47,7 +60,7 @@ jobs:
 
   publish:
     name: Build & Publish
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -69,10 +82,11 @@ jobs:
         with:
           images: manifestdotbuild/manifest
           tags: |
-            type=semver,pattern={{version}},value=${{ inputs.version }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.version }}
-            type=semver,pattern={{major}},value=${{ inputs.version }}
-            type=sha
+            type=raw,value=latest,enable=${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.version == '') }}
+            type=sha,prefix=sha-,enable=${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.version == '') }}
+            type=semver,pattern={{version}},value=${{ inputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && inputs.version != '' }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && inputs.version != '' }}
+            type=semver,pattern={{major}},value=${{ inputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && inputs.version != '' }}
 
       - uses: docker/build-push-action@v6
         id: build

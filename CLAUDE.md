@@ -481,13 +481,12 @@ All pricing comes from a single source:
 
 ## Releases
 
-There are **no publishable npm packages** in this repo anymore. `packages/backend`, `packages/frontend`, and `packages/shared` are all `private: true`. Manifest ships exclusively as the Docker image at `manifestdotbuild/manifest` (built from `docker/Dockerfile`).
-
-Changesets are still installed and wired into the release workflow for internal `CHANGELOG.md` bookkeeping on private packages — they are **not** required on every PR. Use `npx changeset add --empty` if you want to record a changelog entry for a private-package change, otherwise skip it.
+There are **no publishable npm packages** in this repo. `packages/backend`, `packages/frontend`, and `packages/shared` are all `private: true`. Manifest ships exclusively as the Docker image at `manifestdotbuild/manifest` (built from `docker/Dockerfile`). Changesets are **not** used anywhere — don't add `.changeset/*.md` files or run `changeset` commands.
 
 The Docker image is built and published via `.github/workflows/docker.yml`:
-- **PR**: validates the Docker build on changes to `docker/`, `.dockerignore`, `packages/backend/`, `packages/frontend/`, `packages/shared/`, or root `package.json`/`turbo.json`.
-- **Manual publish**: `workflow_dispatch` with a `version` input, run by a maintainer when a new image tag should be pushed.
+- **PR**: validates the Docker build (no push) on changes to `docker/`, `.dockerignore`, `packages/backend/`, `packages/frontend/`, `packages/shared/`, or root `package.json` / `turbo.json`.
+- **Push to `main`**: rebuilds and publishes on the same paths filter, tagging the image as `latest` and `sha-<short>` so every merged PR produces a fresh image automatically.
+- **Manual publish**: `workflow_dispatch` with an optional `version` input. With no input it behaves the same as a push build (`latest` + `sha-<short>`). With a semver input it also adds `{version}`, `{major}.{minor}`, and `{major}` tags for explicit release cuts.
 
 ## Code Coverage (Codecov)
 
